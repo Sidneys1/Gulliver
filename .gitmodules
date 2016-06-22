@@ -1,0 +1,8 @@
+[submodule "ExtendedConsole"]
+	path = ExtendedConsole
+	url = git@github.com:Sidneys1/ExtendedConsole.git
+	branch = master
+[submodule "SimpleArgv"]
+	path = SimpleArgv
+	url = git@github.com:Sidneys1/SimpleArgv.git
+	branch = master

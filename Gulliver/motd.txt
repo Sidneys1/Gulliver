@@ -1,0 +1,2 @@
+﻿Gulliver likes to travel.
+Rename your project with `project rename`

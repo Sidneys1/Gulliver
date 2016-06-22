@@ -5,6 +5,12 @@ VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gulliver", "Gulliver\Gulliver.csproj", "{6DDA6B0E-0903-4CB3-9296-1AF68A94A96D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendedConsole", "ExtendedConsole\ExtendedConsole\ExtendedConsole.csproj", "{848F2B55-5518-4DBB-B574-2FE4824F15AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleArgv", "SimpleArgv\SimpleArgv\SimpleArgv.csproj", "{C637F4AF-D365-4741-94EA-7AADB434BA4F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{0595AA49-3576-4F59-8B64-1144804468CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,8 +21,20 @@ Global
 		{6DDA6B0E-0903-4CB3-9296-1AF68A94A96D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6DDA6B0E-0903-4CB3-9296-1AF68A94A96D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6DDA6B0E-0903-4CB3-9296-1AF68A94A96D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{848F2B55-5518-4DBB-B574-2FE4824F15AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{848F2B55-5518-4DBB-B574-2FE4824F15AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{848F2B55-5518-4DBB-B574-2FE4824F15AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{848F2B55-5518-4DBB-B574-2FE4824F15AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C637F4AF-D365-4741-94EA-7AADB434BA4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C637F4AF-D365-4741-94EA-7AADB434BA4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C637F4AF-D365-4741-94EA-7AADB434BA4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C637F4AF-D365-4741-94EA-7AADB434BA4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{848F2B55-5518-4DBB-B574-2FE4824F15AE} = {0595AA49-3576-4F59-8B64-1144804468CA}
+		{C637F4AF-D365-4741-94EA-7AADB434BA4F} = {0595AA49-3576-4F59-8B64-1144804468CA}
 	EndGlobalSection
 EndGlobal
