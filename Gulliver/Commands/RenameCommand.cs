@@ -40,8 +40,7 @@ namespace Gulliver.Commands {
             }, 
             string.Empty);
         }
-
-
+        
         public override void Run(params string[] parameters) {
             GulliverCli.ProjectName = ((string) _parser.GetValue(string.Empty)).White();
         }

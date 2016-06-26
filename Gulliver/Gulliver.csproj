@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Base\Command.cs" />
+    <Compile Include="Base\Setting.cs" />
     <Compile Include="Base\Topic.cs" />
     <Compile Include="Commands\Builtin\ClsCommand.cs" />
     <Compile Include="Commands\Builtin\ExitCommand.cs" />

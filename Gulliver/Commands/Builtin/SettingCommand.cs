@@ -96,11 +96,18 @@ namespace Gulliver.Commands.Builtin {
             }
 
             Console.WriteLine();
+
+            var val = setting.GetValue();
+            string[] pvals = null;
+            if (val is Enum) {
+                pvals = Enum.GetValues(val.GetType()).Cast<object>().Select(o=>o.ToString()).ToArray();
+            }
+
             new Topic(Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase("Setting '" + settingName+"'"), null, 
                 new FormattedString(
-                    $"Value: {setting.GetValue()}\n" +
+                    $"Value: {val}\n" +
                     $"Default: {setting.DefaultValue}"
-                )
+                ) + (pvals == null?"":"\nPossible Values:\n * "+string.Join("\n * ", pvals))
             ).Print(true);
             PrintHelp(settingName);
         }

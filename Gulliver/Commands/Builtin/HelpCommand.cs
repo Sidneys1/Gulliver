@@ -1,11 +1,12 @@
 using System;
+using System.Linq;
 using ExtendedConsole;
 using Gulliver.Base;
 using Gulliver.Managers;
 using SimpleArgv;
 
 namespace Gulliver.Commands.Builtin {
-    [Command("help")]
+    [Command("help", TabCallback = nameof(TabComplete))]
     [HelpTopic("help", Topic.Commands, Summary, nameof(HelpTopic))]
     internal sealed class HelpCommand : Command {
         #region Help TopicGetter
@@ -15,7 +16,7 @@ namespace Gulliver.Commands.Builtin {
         public static readonly Topic HelpTopic = new Topic("Help", Topic.Commands,
             Summary,
             Summary,
-            subHeaders: new[] {
+            new[] {
                 new Topic("Usage", null,
                     "> " + "help [TOPIC] [-f/--full]".Cyan() + "",
                     subHeaders: new[] {
@@ -43,10 +44,24 @@ namespace Gulliver.Commands.Builtin {
 
         #endregion
 
+        #region Tab complete
+
+        public static string[] TabComplete(int index, string[] partials) {
+            switch (index) {
+                case 0:
+                    return HelpManager.Topics.Keys.Where(k => k.StartsWith(partials[partials.Length - 1], StringComparison.OrdinalIgnoreCase)).ToArray();
+                case 1:
+                    return new[] { "-f", "--full" }.Where(i => i.StartsWith(partials[partials.Length - 1], StringComparison.OrdinalIgnoreCase)).ToArray();
+            }
+            return null;
+        }
+
+        #endregion
+
         private readonly CommandLine _parser = new CommandLine(new[] { "-", "--" });
-        
+
         public override void Run(params string[] parameters) {
-           _parser.Parse(parameters);
+            _parser.Parse(parameters);
             Console.WriteLine();
 
             var topic = _parser.GetValue(string.Empty, (string)null);
@@ -55,20 +70,21 @@ namespace Gulliver.Commands.Builtin {
                 Console.WriteLine();
                 return;
             }
-            
+
             var rootTopic = HelpManager.Topics[topic];
             rootTopic.Print(_parser.GetValue("--full", false));
             Console.WriteLine();
         }
-        
+
         public HelpCommand() {
-            _parser.AddArgument(s => {
-                    var full = string.Join(" ", s);
-                    if (string.IsNullOrWhiteSpace(full)) return null;
-                    if (!HelpManager.Topics.ContainsKey(full))
-                        throw new ArgumentException($"Topic not found: '{full}'", "TOPIC");
-                    return full;
-                },
+            _parser.AddArgument(s =>
+            {
+                var full = string.Join(" ", s);
+                if (string.IsNullOrWhiteSpace(full)) return null;
+                if (!HelpManager.Topics.ContainsKey(full))
+                    throw new ArgumentException($"Topic not found: '{full}'", "TOPIC");
+                return full;
+            },
                 string.Empty);
             _parser.AddArgument(s => true, "--full", "-f");
         }

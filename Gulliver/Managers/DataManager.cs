@@ -5,6 +5,7 @@ using Gulliver.Base;
 
 namespace Gulliver.Managers {
     [HelpTopic("endian", Topic.Settings, "Defines the endianness of the struct interpretation.")]
+    [HelpTopic("byteskip", Topic.Settings, "The number of bytes to skip at the beginning of the data.")]
     internal static class DataManager {
         internal enum EndianValue {
             Unknown,
@@ -20,15 +21,31 @@ namespace Gulliver.Managers {
         public static EndianValue Endianness { get; private set; }
 
         public static object ValidateEndianness(object value) {
-            var s = value as string;
-            if (s == null)
+            var str = value as string;
+            if (str == null)
                 throw new ArgumentException("Value must be a string!", nameof(value));
             EndianValue o;
-            if (!Enum.TryParse(s, true, out o))
+            if (!Enum.TryParse(str, true, out o))
                 throw new ArgumentException("Value could not be parsed!", nameof(value));
             if (o == EndianValue.LittleAuto || o == EndianValue.BigAuto)
                 throw new ArgumentException("Can not set auto endianness!", nameof(value));
             return o;
+        }
+
+        [Setting("byteskip", typeof(int), 0, nameof(ValidateSkip))]
+        public static int Skip { get; private set; }
+
+        public static object ValidateSkip(object value) {
+            var str = value as string;
+            if (str == null)
+                throw new ArgumentException("Value must be a string!", nameof(value));
+
+            int i;
+            if(!int.TryParse(str, out i))
+                throw new ArgumentException("Value could not be parsed!", nameof(value));
+            if (i < 0 || i > Count)
+                throw new ArgumentException($"Value '{i:N0}' is out of bounds (0 to {Count:N0})");
+            return i;
         }
 
         public static double EndianConfidence { get; private set; }
@@ -73,6 +90,7 @@ namespace Gulliver.Managers {
                 } else Endianness = EndianValue.Unknown;
             }
             DataFile = filepath;
+            Skip = 0;
         }
     }
 }
