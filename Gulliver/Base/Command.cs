@@ -1,41 +1,55 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
-using SimpleArgv;
 
 namespace Gulliver.Base {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    internal class CommandAttribute : Attribute {
-        public CommandAttribute(string name, string synopsis, string usage = "", string help = null) {
-            Name = name;
-            Synopsis = synopsis;
-            Usage = usage;
-            Help = help ?? synopsis;
+    [AttributeUsage(AttributeTargets.Property)]
+    internal class SettingAttribute : Attribute {
+        public SettingAttribute(string settingName, Type valueType, object defaultValue = null, string validatorName = null) {
+            if (defaultValue == null && valueType.IsValueType) defaultValue = Activator.CreateInstance(valueType);
+            SettingName = settingName;
+            DefaultValue = defaultValue;
+            ValidatorName = validatorName;
         }
 
-        public string Name { get; }
-        public string Synopsis { get; }
-        public string Help { get; }
-        public string Usage { get; }
+        public string SettingName { get; }
+        public object DefaultValue { get; }
+        public string ValidatorName { get; }
+    }
+
+    internal class Setting {
+        private readonly PropertyInfo _prop;
+        public object DefaultValue { get; }
+        private readonly Func<object, object> _validator;
+
+        public Setting(PropertyInfo property, object defaultValue, Func<object, object> validator = null) {
+            _prop = property;
+            DefaultValue = defaultValue;
+            _validator = validator;
+        }
+
+        public void SetValue(object value) {
+            if (_validator != null)
+                value = _validator.Invoke(value);
+            _prop.SetValue(null, value);
+        }
+
+        public void Reset() => _prop.SetValue(null, DefaultValue);
+
+        public object GetValue() => _prop.GetValue(null);
+
+        public T GetValue<T>() => (T)_prop.GetValue(null);
+    }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    internal class CommandAttribute : Attribute {
+        public CommandAttribute(params string[] names) {
+            Names = names;
+        }
+
+        public string[] Names { get; }
     }
 
     internal abstract class Command {
-        public static Dictionary<string, Type> Commands;
-
-        public readonly CommandLine Parser = new CommandLine(new[] { "-", "--" });
-
-        static Command() {
-
-            Commands = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .Where(t => t.IsSubclassOf(typeof(Command)))
-                .ToDictionary(t => t.GetCustomAttribute<CommandAttribute>(false).Name);
-        }
-
-        public virtual void Run(params string[] parameters) {
-            Parser.Parse(parameters);
-        }
+        public abstract void Run(params string[] parameters);
     }
 }

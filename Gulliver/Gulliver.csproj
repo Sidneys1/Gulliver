@@ -36,11 +36,20 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Base\Command.cs" />
-    <Compile Include="Commands\ExitCommand.cs" />
-    <Compile Include="Commands\HelpCommand.cs" />
+    <Compile Include="Base\Topic.cs" />
+    <Compile Include="Commands\Builtin\ClsCommand.cs" />
+    <Compile Include="Commands\Builtin\ExitCommand.cs" />
+    <Compile Include="Commands\Builtin\HelpCommand.cs" />
+    <Compile Include="Commands\Builtin\SettingCommand.cs" />
+    <Compile Include="Commands\RenameCommand.cs" />
+    <Compile Include="Managers\CommandManager.cs" />
+    <Compile Include="Managers\DataManager.cs" />
+    <Compile Include="Managers\HelpManager.cs" />
+    <Compile Include="Managers\SettingsManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
