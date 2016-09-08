@@ -7,21 +7,31 @@ using ExtendedConsole;
 using Gulliver.Base;
 
 namespace Gulliver.Managers {
-    internal static class HelpManager {
+    internal class HelpManager : CliComponent {
         private static Dictionary<string, Topic> _topics;
         public static IReadOnlyDictionary<string, Topic> Topics => _topics;
-        public static void Initialize() {
-            _topics = Assembly.GetExecutingAssembly().GetTypes()
-                .Where(t => Attribute.IsDefined((MemberInfo) t, typeof(HelpTopicAttribute)))
-                .SelectMany(t => ((HelpTopicAttribute[])Attribute.GetCustomAttributes(t, typeof(HelpTopicAttribute))).Select(a => new Tuple<Type, HelpTopicAttribute>(t, a)))
-                .ToDictionary(a => a.Item2.Keyword,
-                    a => {
-                        var att = a.Item2;
-                        var type = a.Item1;
-                        if (att.TopicGetter == null)
-                            return new Topic(Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(att.Keyword), att.Category, att.Synopsis, att.Synopsis, essential: att.Important);
-                        return (Topic)type.GetField(att.TopicGetter).GetValue(null);
-                    });
+        public override void Initialize() {
+            _topics = new Dictionary<string, Topic>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        public override void ProcessType(Type type) {
+            if (Attribute.IsDefined(type, typeof(AutoHelpTopicAttribute))) {
+                foreach (var att in type.GetCustomAttributes<AutoHelpTopicAttribute>()) {
+                    var topic = new Topic(Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(att.Keywords[0]),
+                        att.Category, att.Synopsis, att.Synopsis, essential: att.Important);
+                    foreach (var keyword in att.Keywords)
+                        _topics.Add(keyword, topic);
+                }
+            }
+
+            foreach (var fieldInfo in 
+                type.GetFields(BindingFlags.Static | BindingFlags.Public)
+                    .Where(f => Attribute.IsDefined(f, typeof(HelpTopicAttribute)))) {
+                var topic = fieldInfo.GetValue(null) as Topic;
+                if (fieldInfo.FieldType != typeof(Topic)) continue;
+                foreach (var keyword in fieldInfo.GetCustomAttribute<HelpTopicAttribute>().Keywords)
+                    _topics.Add(keyword, topic);
+            }
         }
 
         public static void PrintTopicTree(bool all) {

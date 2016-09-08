@@ -16,21 +16,24 @@ namespace Gulliver.Base {
         public string ValidatorName { get; }
     }
 
+    public delegate object Validator(string input);
+
     internal class Setting {
         private readonly PropertyInfo _prop;
-        public object DefaultValue { get; }
-        private readonly Func<object, object> _validator;
+        public readonly object DefaultValue;
+        public readonly Validator Validator;
 
-        public Setting(PropertyInfo property, object defaultValue, Func<object, object> validator = null) {
+        public Setting(PropertyInfo property, object defaultValue, Validator validator = null) {
             _prop = property;
             DefaultValue = defaultValue;
-            _validator = validator;
+            Validator = validator;
         }
 
-        public void SetValue(object value) {
-            if (_validator != null)
-                value = _validator.Invoke(value);
-            _prop.SetValue(null, value);
+        public void SetValue(string value) {
+            object set=value;
+            if (Validator != null)
+                set = Validator(value);
+            _prop.SetValue(null, set);
         }
 
         public void Reset() => _prop.SetValue(null, DefaultValue);
@@ -38,5 +41,7 @@ namespace Gulliver.Base {
         public object GetValue() => _prop.GetValue(null);
 
         public T GetValue<T>() => (T)_prop.GetValue(null);
+
+        public Type SettingType => _prop.PropertyType;
     }
 }

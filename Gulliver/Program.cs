@@ -90,6 +90,8 @@ namespace Gulliver {
     internal static class GulliverCli {
         public const string Branding = "Gulliver 0.1\x03B1";
 
+        public const int MaxSuggestions = 25;
+
         public static FormattedText ProjectName = "untitled project".DarkGray();
 
         public static FormattedString State = "?".Red();
@@ -98,6 +100,7 @@ namespace Gulliver {
 
         static GulliverCli() {
             Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.TreatControlCAsInput = true;
             Console.OutputEncoding = Encoding.GetEncoding(437);
             Console.WriteLine($"Initializing {Branding}...");
             var s = new Stopwatch();
@@ -116,9 +119,14 @@ namespace Gulliver {
         public static bool Running { get; set; } = true;
 
         private static void Initialize() {
-            CommandManager.Initialize();
-            SettingsManager.Initialize();
-            HelpManager.Initialize();
+            var types = Assembly.GetExecutingAssembly().GetTypes();
+            var components = types.Where(t => t.IsSubclassOf(typeof(CliComponent))).Select(t => (CliComponent)Activator.CreateInstance(t)).ToArray();
+            foreach (var component in components)
+                component.Initialize();
+
+            foreach (var type in types)
+                foreach (var component in components)
+                    component.ProcessType(type);
         }
 
         public static void Start(string initialCommand = null) {
@@ -170,13 +178,14 @@ namespace Gulliver {
         }
 
         public static void ExecuteCommand(string commandLine) {
-            var parts = commandLine.Split(new []{' '}, StringSplitOptions.RemoveEmptyEntries);
+            var parts = commandLine.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0 || string.IsNullOrWhiteSpace(commandLine)) return;
             var commandType =
                 CommandManager.Commands.Where(c => c.Key.Equals(parts[0], StringComparison.OrdinalIgnoreCase))
                     .Select(c => c.Value)
                     .FirstOrDefault();
             if (commandType == null) {
-                WriteError("Could not find that command.");
+                WriteError($"Could not find the command '{parts[0]}'.");
                 return;
             }
 
@@ -199,41 +208,60 @@ namespace Gulliver {
             return TabCompleteLine();
         }
 
+        // TODO: Allow input of strings longer than the console width
         private static string TabCompleteLine() {
             var buffer = "";
             var insertionPos = 0;
 
             while (true) {
+                Console.CursorVisible = false;
                 Caret.Write();
                 var parts = buffer.Split(' ');
                 if (CommandManager.Commands.ContainsKey(parts[0])) {
-                    (parts[0] + ' ').Cyan().Write();
+                    var att = CommandManager.Commands[parts[0]].GetCustomAttribute<CommandAttribute>();
+                    new FormattedText(parts[0] + ' ', att.CommandColor).Write();
                     string.Join(" ", parts.Skip(1)).Reset().Write();
                 } else
                     Console.Write(buffer);
                 Console.Write(' ');
                 Console.CursorLeft = Caret.Length + insertionPos - 1;
+                Console.CursorVisible = true;
                 var key = Console.ReadKey(true);
+                if (key.Modifiers == ConsoleModifiers.Control && key.Key == ConsoleKey.C) {
+                    Console.WriteLine("^C");
+                    return string.Empty;
+                }
+
                 switch (key.Key) {
                     case ConsoleKey.Enter:
+                        Console.WriteLine();
                         return buffer;
-                    //case ConsoleKey.Home:
-                    //    insertionPos = 0;
-                    //    break;
-                    //case ConsoleKey.End:
-                    //    insertionPos = buffer.Length;
-                    //    break;
-                    //case ConsoleKey.LeftArrow:
-                    //    if (insertionPos > 0)
-                    //        --insertionPos;
-                    //    break;
-                    //case ConsoleKey.RightArrow:
-                    //    if (insertionPos < buffer.Length)
-                    //        ++insertionPos;
-                    //    break;
+                    case ConsoleKey.Escape:
+                        Console.Write("\r" + new string(' ', Caret.Length + buffer.Length));
+                        buffer = "";
+                        insertionPos = 0;
+                        break;
+                    case ConsoleKey.Home:
+                        insertionPos = 0;
+                        break;
+                    case ConsoleKey.End:
+                        insertionPos = buffer.Length;
+                        break;
+                    case ConsoleKey.LeftArrow:
+                        if (insertionPos > 0)
+                            --insertionPos;
+                        break;
+                    case ConsoleKey.RightArrow:
+                        if (insertionPos < buffer.Length)
+                            ++insertionPos;
+                        break;
                     case ConsoleKey.Backspace:
                         if (insertionPos > 0)
                             buffer = buffer.Remove(--insertionPos, 1);
+                        break;
+                    case ConsoleKey.Delete:
+                        if (insertionPos < buffer.Length)
+                            buffer = buffer.Remove(insertionPos, 1);
                         break;
                     case ConsoleKey.Tab:
                         if (parts.Length == 1 && !CommandManager.Commands.ContainsKey(parts[0])) {
@@ -247,7 +275,9 @@ namespace Gulliver {
                                     buffer = options[0].Substring(0, len);
                                     insertionPos = buffer.Length;
                                 }
-                                Console.WriteLine($"\nOptions: {string.Join(", ", options.OrderBy(o=>o))}");
+                                Console.WriteLine(options.Length <= MaxSuggestions
+                                    ? $"\nOptions: {string.Join(", ", options.OrderBy(o => o))}"
+                                    : $"\nOptions: {string.Join(", ", options.OrderBy(o => o).Take(MaxSuggestions))}\n(Plus {options.Length - MaxSuggestions:N0} more...)");
                             } else if (options.Length == 1) {
                                 buffer = $"{options[0]} ";
                                 insertionPos = buffer.Length;
@@ -255,27 +285,35 @@ namespace Gulliver {
                         } else if (parts.Length > 1 && CommandManager.Commands.ContainsKey(parts[0])) {
                             var type = CommandManager.Commands[parts[0]];
                             var cmdAtt = type.GetCustomAttribute<CommandAttribute>();
+                            var pos = 0;
+                            var add = parts[0].Length + 1;
+                            for (var i = 1; i < parts.Length; i++) {
+                                if ((add += parts[i].Length + 1) <= insertionPos) pos++;
+                                else break;
+                            }
                             if (cmdAtt.TabCallback != null) {
                                 var options = (string[])type.GetMethod(cmdAtt.TabCallback)
                                     .Invoke(null, BindingFlags.Static, null,
-                                        new object[] {parts.Length - 2, parts.Last()},
+                                        new object[] { pos, parts.Skip(1).ToArray() },
                                         null);
                                 if (options != null) {
                                     if (options.Length == 1) {
-                                        parts[parts.Length - 1] = options[0];
-                                        buffer = string.Join(" ", parts)+" ";
-                                        insertionPos = buffer.Length;
+                                        parts[pos + 1] = options[0];
+                                        buffer = string.Join(" ", parts) + " ";
+                                        insertionPos = parts.Take(pos + 2).Sum(p => p.Length + 1) - 1;
                                     } else if (options.Length > 1) {
-                                        var len = parts[parts.Length-1].Length;
+                                        var len = parts[pos + 1].Length;
                                         var max = options.Max(p => p.Length);
                                         while (len < max && options.GroupBy(o => o.Length > len ? o[len] : '\0').Count() == 1)
                                             ++len;
                                         if (len > 0) {
-                                            parts[parts.Length - 1] = options[0].Substring(0, len);
+                                            parts[pos + 1] = options[0].Substring(0, len);
                                             buffer = string.Join(" ", parts);
-                                            insertionPos = buffer.Length;
+                                            insertionPos = parts.Take(pos + 2).Sum(p => p.Length + 1) - 1;
                                         }
-                                        Console.WriteLine($"\nOptions: {string.Join(", ", options.OrderBy(o=>o))}");
+                                        Console.WriteLine(options.Length <= MaxSuggestions
+                                            ? $"\nOptions: {string.Join(", ", options.OrderBy(o => o))}"
+                                            : $"\nOptions: {string.Join(", ", options.OrderBy(o => o).Take(MaxSuggestions))}\n(Plus {options.Length - MaxSuggestions:N0} more...)");
                                     }
                                 }
                             }

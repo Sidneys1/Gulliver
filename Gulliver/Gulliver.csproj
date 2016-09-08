@@ -47,6 +47,7 @@
     <Compile Include="Commands\Builtin\HelpCommand.cs" />
     <Compile Include="Commands\Builtin\SettingCommand.cs" />
     <Compile Include="Commands\RenameCommand.cs" />
+    <Compile Include="Managers\CliComponent.cs" />
     <Compile Include="Managers\CommandManager.cs" />
     <Compile Include="Managers\DataManager.cs" />
     <Compile Include="Managers\HelpManager.cs" />

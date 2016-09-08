@@ -4,9 +4,9 @@ using System.IO;
 using Gulliver.Base;
 
 namespace Gulliver.Managers {
-    [HelpTopic("endian", Topic.Settings, "Defines the endianness of the struct interpretation.")]
-    [HelpTopic("byteskip", Topic.Settings, "The number of bytes to skip at the beginning of the data.")]
-    internal static class DataManager {
+    [AutoHelpTopic(Topic.Settings, "Defines the endianness of the struct interpretation.", true, "endian", "endianness")]
+    [AutoHelpTopic(Topic.Settings, "The number of bytes to skip at the beginning of the data.", true, "byteskip")]
+    internal class DataManager : CliComponent {
         internal enum EndianValue {
             Unknown,
             Little,
@@ -20,12 +20,11 @@ namespace Gulliver.Managers {
         [Setting("endian", typeof(EndianValue), EndianValue.Unknown, nameof(ValidateEndianness))]
         public static EndianValue Endianness { get; private set; }
 
-        public static object ValidateEndianness(object value) {
-            var str = value as string;
-            if (str == null)
+        public static object ValidateEndianness(string value) {
+            if (value == null)
                 throw new ArgumentException("Value must be a string!", nameof(value));
             EndianValue o;
-            if (!Enum.TryParse(str, true, out o))
+            if (!Enum.TryParse(value, true, out o))
                 throw new ArgumentException("Value could not be parsed!", nameof(value));
             if (o == EndianValue.LittleAuto || o == EndianValue.BigAuto)
                 throw new ArgumentException("Can not set auto endianness!", nameof(value));
@@ -35,13 +34,12 @@ namespace Gulliver.Managers {
         [Setting("byteskip", typeof(int), 0, nameof(ValidateSkip))]
         public static int Skip { get; private set; }
 
-        public static object ValidateSkip(object value) {
-            var str = value as string;
-            if (str == null)
+        public static object ValidateSkip(string value) {
+            if (value == null)
                 throw new ArgumentException("Value must be a string!", nameof(value));
 
             int i;
-            if(!int.TryParse(str, out i))
+            if(!int.TryParse(value, out i))
                 throw new ArgumentException("Value could not be parsed!", nameof(value));
             if (i < 0 || i > Count)
                 throw new ArgumentException($"Value '{i:N0}' is out of bounds (0 to {Count:N0})");
@@ -92,5 +90,9 @@ namespace Gulliver.Managers {
             DataFile = filepath;
             Skip = 0;
         }
+
+        public override void Initialize() {}
+
+        public override void ProcessType(Type type) {}
     }
 }

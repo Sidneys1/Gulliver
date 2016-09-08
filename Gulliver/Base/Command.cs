@@ -9,6 +9,7 @@ namespace Gulliver.Base {
 
         public string[] Names { get; }
         public string TabCallback { get; set; }
+        public ConsoleColor CommandColor { get; set; } = ConsoleColor.Cyan;
     }
 
     internal abstract class Command {

@@ -5,12 +5,12 @@ using SimpleArgv;
 
 namespace Gulliver.Commands {
     [Command("rename")]
-    [HelpTopic("rename", Topic.Commands, Summary, nameof(HelpTopic))]
     internal class RenameCommand : Command {
         #region Help TopicGetter
 
         private const string Summary = "Used to rename the active project.";
 
+        [HelpTopic("rename")]
         public static readonly Topic HelpTopic = new Topic("Rename", Topic.Commands,
             Summary,
             Summary,

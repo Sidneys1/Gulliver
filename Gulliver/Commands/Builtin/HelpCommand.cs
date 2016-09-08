@@ -7,35 +7,35 @@ using SimpleArgv;
 
 namespace Gulliver.Commands.Builtin {
     [Command("help", TabCallback = nameof(TabComplete))]
-    [HelpTopic("help", Topic.Commands, Summary, nameof(HelpTopic))]
     internal sealed class HelpCommand : Command {
-        #region Help TopicGetter
+        #region Help Topic
 
         private const string Summary = "Prints information related to a variety of topics.";
 
+        [HelpTopic("help")]
         public static readonly Topic HelpTopic = new Topic("Help", Topic.Commands,
             Summary,
             Summary,
             new[] {
                 new Topic("Usage", null,
-                    "> " + "help [TOPIC] [-f/--full]".Cyan() + "",
+                    "  > " + "help [TOPIC] [-f/--full]".Cyan() + "",
                     subHeaders: new[] {
                         new Topic("Parameters", null,
-                            " * " + "TOPIC".Cyan() + ": The title of the topic to print.\n" +
-                            " * " + "-f/--full".Cyan() + ": Displays more information or topics.",
+                            "     * " + "TOPIC".Cyan() + ": The title of the topic to print.\n" +
+                            "     * " + "-f/--full".Cyan() + ": Displays more information or topics.",
                             essential: false
                         )
                     }
                 ),
                 new Topic("Examples", null,
-                    " * List all core topics:\n" +
-                    "   > " + "help\n".Cyan() +
-                    " * List every available topic:\n" +
-                    "   > " + "help -f\n".Cyan() +
-                    " * Show topic about the '" + "exit".Cyan() + "' command:\n" +
-                    "   > " + "help exit\n".Cyan() +
-                    " * Show this entire help topic:\n" +
-                    "   > " + "help help --full".Cyan() +
+                    "   * List all core topics:\n" +
+                    "     > " + "help\n".Cyan() +
+                    "   * List every available topic:\n" +
+                    "     > " + "help -f\n".Cyan() +
+                    "   * Show topic about the '" + "exit".Cyan() + "' command:\n" +
+                    "     > " + "help exit\n".Cyan() +
+                    "   * Show this entire help topic:\n" +
+                    "     > " + "help help --full".Cyan() +
                     "",
                     essential: false
                 ),
@@ -46,12 +46,13 @@ namespace Gulliver.Commands.Builtin {
 
         #region Tab complete
 
+        public static string[] fullParam = new[] { "--full", "-f" };
         public static string[] TabComplete(int index, string[] partials) {
             switch (index) {
                 case 0:
-                    return HelpManager.Topics.Keys.Where(k => k.StartsWith(partials[partials.Length - 1], StringComparison.OrdinalIgnoreCase)).ToArray();
+                    return HelpManager.Topics.Keys.Union(fullParam).Where(k => k.StartsWith(partials[index], StringComparison.OrdinalIgnoreCase)).ToArray();
                 case 1:
-                    return new[] { "-f", "--full" }.Where(i => i.StartsWith(partials[partials.Length - 1], StringComparison.OrdinalIgnoreCase)).ToArray();
+                    return fullParam.Where(i => i.StartsWith(partials[index], StringComparison.OrdinalIgnoreCase)).ToArray();
             }
             return null;
         }
@@ -86,7 +87,7 @@ namespace Gulliver.Commands.Builtin {
                 return full;
             },
                 string.Empty);
-            _parser.AddArgument(s => true, "--full", "-f");
+            _parser.AddArgument(s => true, fullParam);
         }
     }
 }

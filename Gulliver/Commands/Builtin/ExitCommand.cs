@@ -2,7 +2,7 @@
 using Gulliver.Base;
 
 namespace Gulliver.Commands.Builtin {
-    [Command("exit"), HelpTopic("exit", Topic.Commands, "Exits Gulliver")]
+    [Command("exit", CommandColor = ConsoleColor.Red), AutoHelpTopic(Topic.Commands, "Exits Gulliver", true, "exit")]
     internal class ExitCommand : Command {
         public override void Run(params string[] parameters) {
             if (parameters.Length != 0)

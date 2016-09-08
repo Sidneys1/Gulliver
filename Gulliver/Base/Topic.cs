@@ -3,21 +3,26 @@ using System.Collections.Generic;
 using ExtendedConsole;
 
 namespace Gulliver.Base {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
-    internal class HelpTopicAttribute : Attribute {
-        public HelpTopicAttribute(string keyword, string category, string synopsis, string topicGetter = null, bool important = true) {
-            Keyword = keyword;
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+    internal class AutoHelpTopicAttribute : HelpTopicAttribute {
+        public AutoHelpTopicAttribute(string category, string synopsis, bool important, params string[] keywords) : base(keywords) {
             Category = category;
             Synopsis = synopsis;
-            TopicGetter = topicGetter;
             Important = important;
         }
-
-        public string Keyword { get; }
+        
         public string Category { get; }
         public string Synopsis { get; }
-        public string TopicGetter { get; }
         public bool Important { get; }
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
+    internal class HelpTopicAttribute : Attribute {
+        public HelpTopicAttribute(params string[] keywords) {
+            Keywords = keywords;
+        }
+
+        public string[] Keywords { get; }
     }
 
     internal class Topic {
@@ -40,16 +45,14 @@ namespace Gulliver.Base {
             Essential = essential;
         }
 
-        private static readonly char[] Levels = {'#', '=', '~', '-'};
+        private static readonly char[] Levels = { '#', '=', '-' };
         private static bool _signalled;
         public void Print(bool full, int level = 0) {
             if (level == 0) _signalled = false;
-            Console.WriteLine(Header);
-            Console.WriteLine(new string(level < Levels.Length ? Levels[level] : Levels[Levels.Length - 1], Header.Length));
-            Console.WriteLine();
+            var space = new string(' ', level * 2);
+            (space + Header + '\n' + space + new string(level < Levels.Length ? Levels[level] : Levels[Levels.Length - 1], Header.Length) + "\n").White().Write();
             TopicBody.Write();
-            Console.WriteLine();
-            Console.WriteLine();
+            Console.WriteLine('\n');
             if (SubHeaders == null) return;
             foreach (var subHeader in SubHeaders) {
                 if (!full && !subHeader.Essential) {
