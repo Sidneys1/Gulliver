@@ -8,6 +8,7 @@ using System.Text;
 using ExtendedConsole;
 using Gulliver.Base;
 using Gulliver.Managers;
+using Gulliver.Managers.Builtin;
 using _Console = ExtendedConsole.ExtendedConsole;
 
 namespace Gulliver {
@@ -96,7 +97,7 @@ namespace Gulliver {
 
         public static FormattedString State = "?".Red();
 
-        public static FormattedString Caret = "\rGulliver".Blue() + "> ";
+        public static FormattedString Caret = "\rGulliver".Yellow() + "> ";
 
         static GulliverCli() {
             Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -140,6 +141,8 @@ namespace Gulliver {
                 ExecuteCommand(command);
                 command = null;
             } while (Running);
+
+            Console.WriteLine("Gulliver is exiting...");
         }
 
         private static void PrintMotd() {
@@ -291,8 +294,12 @@ namespace Gulliver {
                                 if ((add += parts[i].Length + 1) <= insertionPos) pos++;
                                 else break;
                             }
-                            if (cmdAtt.TabCallback != null) {
-                                var options = (string[])type.GetMethod(cmdAtt.TabCallback)
+
+                            var tabCallbackMethod = type.GetMethods(BindingFlags.Static | BindingFlags.Public)
+                                .FirstOrDefault(m => m.GetCustomAttribute<TabCallbackAttribute>() != null);
+
+                            if (tabCallbackMethod != null) {
+                                var options = (string[])tabCallbackMethod
                                     .Invoke(null, BindingFlags.Static, null,
                                         new object[] { pos, parts.Skip(1).ToArray() },
                                         null);

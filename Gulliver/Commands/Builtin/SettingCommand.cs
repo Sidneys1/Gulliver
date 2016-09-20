@@ -4,10 +4,11 @@ using System.Threading;
 using ExtendedConsole;
 using Gulliver.Base;
 using Gulliver.Managers;
+using Gulliver.Managers.Builtin;
 using SimpleArgv;
 
 namespace Gulliver.Commands.Builtin {
-    [Command("setting", "settings", TabCallback = nameof(TabComplete))]
+    [Command("setting", "settings")]
     internal class SettingCommand : Command {
         #region Help TopicGetter
 
@@ -50,8 +51,9 @@ namespace Gulliver.Commands.Builtin {
 
         #region TabCallback
 
-        public static string[] SetParam = { "--set", "-s" };
-        public static string[] ResetParam = { "--reset", "-r" };
+        private static readonly string[] SetParam = { "--set", "-s" };
+        private static readonly string[] ResetParam = { "--reset", "-r" };
+        [TabCallback]
         public static string[] TabComplete(int index, string[] partials) {
             switch (index) {
                 case 0:

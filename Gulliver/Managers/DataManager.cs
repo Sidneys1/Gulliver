@@ -90,9 +90,5 @@ namespace Gulliver.Managers {
             DataFile = filepath;
             Skip = 0;
         }
-
-        public override void Initialize() {}
-
-        public override void ProcessType(Type type) {}
     }
 }

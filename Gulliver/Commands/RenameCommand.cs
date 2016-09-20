@@ -14,7 +14,7 @@ namespace Gulliver.Commands {
         public static readonly Topic HelpTopic = new Topic("Rename", Topic.Commands,
             Summary,
             Summary,
-            subHeaders: new[] {
+            new[] {
                 new Topic("Usage", null,
                     "> " + "rename [NAME]".Cyan() + "",
                     subHeaders: new[] {
@@ -41,8 +41,6 @@ namespace Gulliver.Commands {
             string.Empty);
         }
         
-        public override void Run(params string[] parameters) {
-            GulliverCli.ProjectName = ((string) _parser.GetValue(string.Empty)).White();
-        }
+        public override void Run(params string[] parameters) => GulliverCli.ProjectName = ((string) _parser.GetValue(string.Empty)).White();
     }
 }

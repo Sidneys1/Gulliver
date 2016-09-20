@@ -1,5 +1,5 @@
-﻿Gulliver likes to travel.
+﻿Gulliver likes to travel!
 Rename your project with the `rename` command. (Groundbreaking!)
 Adjust or reset settings with the `settings` command. (Go figure!)
 You can clear the screen with the `clear` command. (Inuitive and stylish!)
-You can autocomplete many commands with the Tab key!
+You can autocomplete most commands with the Tab key!

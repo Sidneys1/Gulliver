@@ -3,10 +3,11 @@ using System.Linq;
 using ExtendedConsole;
 using Gulliver.Base;
 using Gulliver.Managers;
+using Gulliver.Managers.Builtin;
 using SimpleArgv;
 
 namespace Gulliver.Commands.Builtin {
-    [Command("help", TabCallback = nameof(TabComplete))]
+    [Command("help")]
     internal sealed class HelpCommand : Command {
         #region Help Topic
 
@@ -46,13 +47,14 @@ namespace Gulliver.Commands.Builtin {
 
         #region Tab complete
 
-        public static string[] fullParam = new[] { "--full", "-f" };
+        private static readonly string[] FullParam = { "--full", "-f" };
+        [TabCallback]
         public static string[] TabComplete(int index, string[] partials) {
             switch (index) {
                 case 0:
-                    return HelpManager.Topics.Keys.Union(fullParam).Where(k => k.StartsWith(partials[index], StringComparison.OrdinalIgnoreCase)).ToArray();
+                    return HelpManager.Topics.Keys.Union(FullParam).Where(k => k.StartsWith(partials[index], StringComparison.OrdinalIgnoreCase)).ToArray();
                 case 1:
-                    return fullParam.Where(i => i.StartsWith(partials[index], StringComparison.OrdinalIgnoreCase)).ToArray();
+                    return FullParam.Where(i => i.StartsWith(partials[index], StringComparison.OrdinalIgnoreCase)).ToArray();
             }
             return null;
         }
@@ -72,22 +74,20 @@ namespace Gulliver.Commands.Builtin {
                 return;
             }
 
-            var rootTopic = HelpManager.Topics[topic];
-            rootTopic.Print(_parser.GetValue("--full", false));
+            HelpManager.Topics[topic].Item1.Print(_parser.GetValue("--full", false));
             Console.WriteLine();
         }
 
         public HelpCommand() {
-            _parser.AddArgument(s =>
-            {
-                var full = string.Join(" ", s);
-                if (string.IsNullOrWhiteSpace(full)) return null;
-                if (!HelpManager.Topics.ContainsKey(full))
-                    throw new ArgumentException($"Topic not found: '{full}'", "TOPIC");
-                return full;
-            },
+            _parser.AddArgument(s => {
+                    var full = string.Join(" ", s);
+                    if (string.IsNullOrWhiteSpace(full)) return null;
+                    if (!HelpManager.Topics.ContainsKey(full))
+                        throw new ArgumentException($"Topic not found: '{full}'", "TOPIC");
+                    return full;
+                },
                 string.Empty);
-            _parser.AddArgument(s => true, fullParam);
+            _parser.AddArgument(s => true, FullParam);
         }
     }
 }
